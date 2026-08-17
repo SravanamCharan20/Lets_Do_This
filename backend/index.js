@@ -3,11 +3,13 @@ import mongoose from "mongoose";
 import dotenv from "dotenv";
 import documentRouter from "./routes/documentRoutes.js";
 dotenv.config();
+import cors from 'cors'
 
 const app = express();
 const PORT = 6969;
 
 app.use(express.json());
+app.use(cors());
 app.use("/docs", documentRouter);
 
 mongoose

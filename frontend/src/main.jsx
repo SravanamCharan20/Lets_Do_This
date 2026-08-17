@@ -4,6 +4,7 @@ import './index.css'
 import App from './App.jsx'
 import { createBrowserRouter, RouterProvider } from "react-router";
 import Document from './pages/Document.jsx';
+import ShowDoc from './pages/ShowDoc.jsx';
 
 const router = createBrowserRouter([
   {
@@ -14,6 +15,12 @@ const router = createBrowserRouter([
         path: "/document",
         element: (
             <Document />
+        ),
+      },
+      {
+        path: "/show-docs",
+        element: (
+            <ShowDoc />
         ),
       },
       
