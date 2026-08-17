@@ -1,4 +1,6 @@
 /* eslint-disable no-unused-vars */
+import { useCallback } from "react";
+import { useEffect } from "react";
 import { useState } from "react";
 
 const SearchDocs = () => {
@@ -9,18 +11,18 @@ const SearchDocs = () => {
   const [error, setError] = useState("");
   const [data, setData] = useState([]);
 
-  const handleSearch = async () => {
+  const handleSearch = useCallback(async () => {
     setSuccess("");
     setError("");
 
     try {
       const response = await fetch(
         `http://localhost:6969/docs/search?query=${encodeURIComponent(
-          query
+          query,
         )}&category=${encodeURIComponent(category)}`,
         {
           method: "POST",
-        }
+        },
       );
 
       if (!response.ok) {
@@ -37,7 +39,17 @@ const SearchDocs = () => {
       setError(error.message);
       console.log(error);
     }
-  };
+  },[query,category]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      handleSearch();
+    }, 500);
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [query,category,handleSearch]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 px-4 py-16">
@@ -92,11 +104,6 @@ const SearchDocs = () => {
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    handleSearch();
-                  }
-                }}
                 placeholder="Search documents..."
                 className="w-full bg-transparent px-3 py-3 text-slate-800 outline-none placeholder:text-slate-400"
               />

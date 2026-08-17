@@ -75,7 +75,7 @@ documentRouter.post("/search", async (req, res) => {
     ]);
 
     const filteredResults = results.filter((res) => res.score >= MIN_SCORE);
-    console.log(filteredResults)
+    // console.log(filteredResults)
     return res.status(200).json({
       message: "search success",
       filteredResults,
