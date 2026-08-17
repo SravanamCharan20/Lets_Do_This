@@ -19,7 +19,3 @@ export const setCache = async (key, data, expiry = 60) => {
   );
 };
 
-
-export const LRUCache = async (key,data,expiry) => {
-    
-}

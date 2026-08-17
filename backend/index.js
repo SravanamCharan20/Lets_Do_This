@@ -5,6 +5,7 @@ import documentRouter from "./routes/documentRoutes.js";
 dotenv.config();
 import cors from 'cors'
 import "./workers/documentWorker.js";
+import aiRouter from "./routes/aiRouter.js";
 
 const app = express();
 const PORT = 6969;
@@ -16,6 +17,7 @@ app.use(
   })
 );
 app.use("/docs", documentRouter);
+app.use("/ai", aiRouter);
 
 mongoose
   .connect(process.env.MONGO_URL)

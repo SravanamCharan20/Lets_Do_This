@@ -4,6 +4,7 @@ import { generateEmbedding } from "../utils/generateEmbedding.js";
 import documentQueue from "../queues/documentQueue.js";
 import { getCache, setCache } from "../utils/cache.js";
 import rateLimiter from "../middleware/rateLimiter.js";
+import { documentSearch } from "../utils/documentSearch.js";
 
 const documentRouter = express.Router();
 
@@ -61,7 +62,7 @@ documentRouter.get("/fetch-doc", async (req, res) => {
   }
 });
 
-documentRouter.post("/search",rateLimiter, async (req, res) => {
+documentRouter.post("/search", rateLimiter, async (req, res) => {
   const MIN_SCORE = 0.6;
   try {
     const { query, category } = req.query;
@@ -77,40 +78,7 @@ documentRouter.post("/search",rateLimiter, async (req, res) => {
         filteredResults: cachedResults,
       });
     }
-    const embeddedQuery = await generateEmbedding(query);
-
-    
-    const vectorSearchStage = {
-      $vectorSearch: {
-        index: "vector_index",
-        path: "embedding",
-        queryVector: embeddedQuery,
-        numCandidates: 50,
-        limit: 5,
-      },
-    };
-
-    if (category) {
-      vectorSearchStage.$vectorSearch.filter = {
-        category: { $eq: category },
-      };
-    }
-
-    const results = await Document.aggregate([
-      vectorSearchStage,
-      {
-        $project: {
-          title: 1,
-          content: 1,
-          category: 1,
-          score: {
-            $meta: "vectorSearchScore",
-          },
-        },
-      },
-    ]);
-
-    const filteredResults = results.filter((res) => res.score >= MIN_SCORE);
+    const filteredResults = await documentSearch(query, category);
     // console.log(filteredResults)
     await setCache(cacheKey, filteredResults, 60);
     return res.status(200).json({

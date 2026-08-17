@@ -6,6 +6,7 @@ import { createBrowserRouter, RouterProvider } from "react-router";
 import Document from './pages/Document.jsx';
 import ShowDoc from './pages/ShowDoc.jsx';
 import SearchDocs from './pages/SearchDocs.jsx';
+import AiChat from './pages/AiChat.jsx';
 
 const router = createBrowserRouter([
   {
@@ -28,6 +29,12 @@ const router = createBrowserRouter([
         path: "/search-docs",
         element: (
             <SearchDocs />
+        ),
+      },
+      {
+        path: "/chat",
+        element: (
+            <AiChat />
         ),
       },
       
