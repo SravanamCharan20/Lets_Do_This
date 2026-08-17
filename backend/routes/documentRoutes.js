@@ -2,6 +2,7 @@ import express from "express";
 import Document from "../models/Document.js";
 import { generateEmbedding } from "../utils/generateEmbedding.js";
 import documentQueue from "../queues/documentQueue.js";
+import { getCache, setCache } from "../utils/cache.js";
 
 const documentRouter = express.Router();
 
@@ -66,9 +67,18 @@ documentRouter.post("/search", async (req, res) => {
     if (!query) {
       return res.status(400).json({ message: "No Query there !" });
     }
+    const cacheKey = `search:${query}:${category || "all"}`;
+    const cachedResults = await getCache(cacheKey);
 
+    if (cachedResults) {
+      return res.status(200).json({
+        message: "search success - cache hit",
+        filteredResults: cachedResults,
+      });
+    }
     const embeddedQuery = await generateEmbedding(query);
 
+    
     const vectorSearchStage = {
       $vectorSearch: {
         index: "vector_index",
@@ -101,6 +111,7 @@ documentRouter.post("/search", async (req, res) => {
 
     const filteredResults = results.filter((res) => res.score >= MIN_SCORE);
     // console.log(filteredResults)
+    await setCache(cacheKey, filteredResults, 60);
     return res.status(200).json({
       message: "search success",
       filteredResults,
