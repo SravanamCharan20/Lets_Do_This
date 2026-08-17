@@ -49,13 +49,25 @@ documentRouter.post("/upload-doc", async (req, res) => {
 
 documentRouter.get("/fetch-doc", async (req, res) => {
   try {
-    const doc = await Document.find({});
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 3;
+    const skipPage = (page - 1) * limit;
+    const doc = await Document.find({}).skip(skipPage).limit(limit).sort(({createdAt : -1}));
+    const total = await Document.countDocuments();
+    const totalPages = Math.ceil(total / limit);
     if (!doc || doc.length === 0) {
       return res.status(404).json({ message: "No docs !" });
     }
-    return res
-      .status(200)
-      .json({ message: "Doc Created Successfully !", document: doc });
+    return res.status(200).json({
+      message: "Doc Created Successfully !",
+      document: doc,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages,
+      },
+    });
   } catch (error) {
     console.log("Error : ", error);
     return res.status(500).json({ message: "Error While Fetching Doc !" });
