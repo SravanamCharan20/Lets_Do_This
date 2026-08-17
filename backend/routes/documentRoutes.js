@@ -6,12 +6,12 @@ const documentRouter = express.Router();
 
 documentRouter.post("/upload-doc", async (req, res) => {
   try {
-    const { title, content } = req.body;
+    const { title, content, category } = req.body;
     if (!title || !content) {
       return res.status(400).json({ message: "All fields are required !" });
     }
     const embedding = await generateEmbedding(`${title}\n${content}`);
-    const newDoc = await Document.create({ title, content, embedding });
+    await Document.create({ title, content, category, embedding });
     return res.status(201).json({ message: "Doc Created Successfully !" });
   } catch (error) {
     console.log("Error : ", error);
@@ -22,8 +22,8 @@ documentRouter.post("/upload-doc", async (req, res) => {
 documentRouter.get("/fetch-doc", async (req, res) => {
   try {
     const doc = await Document.find({});
-    if (!doc) {
-      return res.status(400).json({ message: "No docs !" });
+    if (!doc || doc.length === 0) {
+      return res.status(404).json({ message: "No docs !" });
     }
     return res
       .status(200)
@@ -36,27 +36,36 @@ documentRouter.get("/fetch-doc", async (req, res) => {
 
 documentRouter.post("/search", async (req, res) => {
   try {
-    const { query } = req.query;
+    const { query, category } = req.query;
     if (!query) {
       return res.status(400).json({ message: "No Query there !" });
     }
 
     const embeddedQuery = await generateEmbedding(query);
 
-    const results = await Document.aggregate([
-      {
-        $vectorSearch: {
-          index: "vector_index",
-          path: "embedding",
-          queryVector: embeddedQuery,
-          numCandidates: 50,
-          limit: 5,
-        },
+    const vectorSearchStage = {
+      $vectorSearch: {
+        index: "vector_index",
+        path: "embedding",
+        queryVector: embeddedQuery,
+        numCandidates: 50,
+        limit: 5,
       },
+    };
+
+    if (category) {
+      vectorSearchStage.$vectorSearch.filter = {
+        category: { $eq: category },
+      };
+    }
+
+    const results = await Document.aggregate([
+      vectorSearchStage,
       {
         $project: {
           title: 1,
           content: 1,
+          category: 1,
           score: {
             $meta: "vectorSearchScore",
           },
@@ -65,7 +74,7 @@ documentRouter.post("/search", async (req, res) => {
     ]);
 
     return res.status(200).json({
-      message : "search success",
+      message: "search success",
       results,
     });
   } catch (error) {

@@ -1,15 +1,23 @@
+/* eslint-disable no-unused-vars */
 import { useState } from "react";
 
 const SearchDocs = () => {
   const [query, setQuery] = useState("");
+  const [category, setCategory] = useState("");
+
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
   const [data, setData] = useState([]);
 
   const handleSearch = async () => {
+    setSuccess("");
+    setError("");
+
     try {
       const response = await fetch(
-        `http://localhost:6969/docs/search?query=${query}`,
+        `http://localhost:6969/docs/search?query=${encodeURIComponent(
+          query
+        )}&category=${encodeURIComponent(category)}`,
         {
           method: "POST",
         }
@@ -19,11 +27,12 @@ const SearchDocs = () => {
         throw new Error("Failed to search documents");
       }
 
-      const data = await response.json();
+      const result = await response.json();
 
-      console.log(data.results);
-      setData(data.results);
-      setSuccess(data.message);
+      console.log(result.results);
+
+      setData(result.results || []);
+      setSuccess(result.message || "");
     } catch (error) {
       setError(error.message);
       console.log(error);
@@ -32,7 +41,7 @@ const SearchDocs = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 px-4 py-16">
-      <div className="mx-auto max-w-3xl">
+      <div className="mx-auto max-w-4xl">
         {/* Header */}
         <div className="mb-8 text-center">
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-900 text-white shadow-lg">
@@ -63,6 +72,7 @@ const SearchDocs = () => {
         {/* Search Box */}
         <div className="rounded-2xl border border-slate-200 bg-white/80 p-2 shadow-xl shadow-slate-200/50 backdrop-blur-sm">
           <div className="flex items-center gap-2">
+            {/* Search Input */}
             <div className="flex flex-1 items-center">
               <svg
                 className="ml-3 h-5 w-5 text-slate-400"
@@ -82,11 +92,30 @@ const SearchDocs = () => {
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    handleSearch();
+                  }
+                }}
                 placeholder="Search documents..."
                 className="w-full bg-transparent px-3 py-3 text-slate-800 outline-none placeholder:text-slate-400"
               />
             </div>
 
+            {/* Category */}
+            <select
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              className="rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm text-slate-700 outline-none focus:border-slate-400"
+            >
+              <option value="">All Categories</option>
+              <option value="frontend">Frontend</option>
+              <option value="backend">Backend</option>
+              <option value="database">Database</option>
+              <option value="devops">DevOps</option>
+            </select>
+
+            {/* Search Button */}
             <button
               onClick={handleSearch}
               className="rounded-xl bg-slate-900 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 hover:shadow-md active:scale-[0.98]"
@@ -102,6 +131,7 @@ const SearchDocs = () => {
             <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-red-100">
               !
             </div>
+
             {error}
           </div>
         )}
@@ -127,6 +157,16 @@ const SearchDocs = () => {
             </div>
           )}
 
+          {/* No Results */}
+          {!error && data.length === 0 && query && (
+            <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center">
+              <p className="text-sm text-slate-500">
+                No matching documents found.
+              </p>
+            </div>
+          )}
+
+          {/* Result Cards */}
           <div className="space-y-4">
             {data.map((doc) => (
               <div
@@ -135,15 +175,24 @@ const SearchDocs = () => {
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
-                    <h2 className="text-lg font-semibold text-slate-900 transition group-hover:text-blue-600">
-                      {doc.title}
-                    </h2>
+                    <div className="flex items-center gap-2">
+                      <h2 className="text-lg font-semibold text-slate-900 transition group-hover:text-blue-600">
+                        {doc.title}
+                      </h2>
+
+                      {doc.category && (
+                        <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-500">
+                          {doc.category}
+                        </span>
+                      )}
+                    </div>
 
                     <p className="mt-2 text-sm leading-6 text-slate-600">
                       {doc.content}
                     </p>
                   </div>
 
+                  {/* Similarity Score */}
                   <div className="shrink-0 rounded-full bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-600">
                     {doc.score?.toFixed(3)}
                   </div>
