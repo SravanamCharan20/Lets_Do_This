@@ -9,7 +9,11 @@ const app = express();
 const PORT = 6969;
 
 app.use(express.json());
-app.use(cors());
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+  })
+);
 app.use("/docs", documentRouter);
 
 mongoose

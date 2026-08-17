@@ -9,6 +9,9 @@ const documentSchema = new mongoose.Schema(
     content: {
       type: String,
     },
+    embedding : {
+      type : [Number]
+    }
   },
   { timestamps: true },
 );

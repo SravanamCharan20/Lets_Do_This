@@ -6,10 +6,9 @@ const Navbar = () => {
   const location = useLocation();
 
   const navItems = [
-    { name: "Home", path: "/" },
     { name: "Documents", path: "/document" },
-    { name: "Profile", path: "/profile" },
     { name: "ShowDocs", path: "/show-docs" },
+    { name: "SearchDocs", path: "/search-docs" },
   ];
 
   return (
