@@ -10,7 +10,7 @@ documentRouter.post("/upload-doc", async (req, res) => {
     if (!title || !content) {
       return res.status(400).json({ message: "All fields are required !" });
     }
-    const embedding = await generateEmbedding(`${title}\n${content}`);
+    const embedding = await generateEmbedding(`${title}\n${content}\n${category}`);
     await Document.create({ title, content, category, embedding });
     return res.status(201).json({ message: "Doc Created Successfully !" });
   } catch (error) {
@@ -35,6 +35,7 @@ documentRouter.get("/fetch-doc", async (req, res) => {
 });
 
 documentRouter.post("/search", async (req, res) => {
+  const MIN_SCORE = 0.6;
   try {
     const { query, category } = req.query;
     if (!query) {
@@ -73,9 +74,11 @@ documentRouter.post("/search", async (req, res) => {
       },
     ]);
 
+    const filteredResults = results.filter((res) => res.score >= MIN_SCORE);
+    console.log(filteredResults)
     return res.status(200).json({
       message: "search success",
-      results,
+      filteredResults,
     });
   } catch (error) {
     console.log("Error : ", error);

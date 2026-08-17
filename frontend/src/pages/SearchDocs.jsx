@@ -31,7 +31,7 @@ const SearchDocs = () => {
 
       console.log(result.results);
 
-      setData(result.results || []);
+      setData(result.filteredResults || []);
       setSuccess(result.message || "");
     } catch (error) {
       setError(error.message);
