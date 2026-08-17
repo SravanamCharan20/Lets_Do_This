@@ -1,6 +1,7 @@
 import express from "express";
 import Document from "../models/Document.js";
 import { generateEmbedding } from "../utils/generateEmbedding.js";
+import documentQueue from "../queues/documentQueue.js";
 
 const documentRouter = express.Router();
 
@@ -10,8 +11,32 @@ documentRouter.post("/upload-doc", async (req, res) => {
     if (!title || !content) {
       return res.status(400).json({ message: "All fields are required !" });
     }
-    const embedding = await generateEmbedding(`${title}\n${content}\n${category}`);
-    await Document.create({ title, content, category, embedding });
+
+    const newDoc = await Document.create({
+      title,
+      content,
+      category,
+    });
+
+    await documentQueue.add(
+      "generate-embedding",
+      {
+        documentId: newDoc._id.toString(),
+        text: `${title}\n${content}\n${category}`,
+      },
+      {
+        attempts: 3,
+        backoff: {
+          type: "exponential",
+          delay: 1000,
+        },
+      },
+    );
+
+    return res.status(201).json({
+      message: "Document created and embedding job queued!",
+      documentId: newDoc._id,
+    });
     return res.status(201).json({ message: "Doc Created Successfully !" });
   } catch (error) {
     console.log("Error : ", error);

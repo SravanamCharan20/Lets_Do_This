@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import documentRouter from "./routes/documentRoutes.js";
 dotenv.config();
 import cors from 'cors'
+import "./workers/documentWorker.js";
 
 const app = express();
 const PORT = 6969;
