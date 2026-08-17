@@ -26,7 +26,8 @@ const SearchDocs = () => {
       );
 
       if (!response.ok) {
-        throw new Error("Failed to search documents");
+        const data = await response.json();
+        throw new Error(data.message || "Failed to search documents");
       }
 
       const result = await response.json();

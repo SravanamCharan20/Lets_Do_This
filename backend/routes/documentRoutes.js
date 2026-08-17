@@ -3,6 +3,7 @@ import Document from "../models/Document.js";
 import { generateEmbedding } from "../utils/generateEmbedding.js";
 import documentQueue from "../queues/documentQueue.js";
 import { getCache, setCache } from "../utils/cache.js";
+import rateLimiter from "../middleware/rateLimiter.js";
 
 const documentRouter = express.Router();
 
@@ -60,7 +61,7 @@ documentRouter.get("/fetch-doc", async (req, res) => {
   }
 });
 
-documentRouter.post("/search", async (req, res) => {
+documentRouter.post("/search",rateLimiter, async (req, res) => {
   const MIN_SCORE = 0.6;
   try {
     const { query, category } = req.query;
